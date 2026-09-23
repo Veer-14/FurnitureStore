@@ -1,0 +1,203 @@
+﻿@model List<FurnitureStore.Models.Product>
+
+@{
+    ViewData["Title"] = "Home";
+
+    var categories =
+        ViewBag.Categories as List<FurnitureStore.Models.Category>;
+}
+
+<section class="hero">
+
+    <div class="container">
+
+        <div class="hero-content">
+
+            <p class="eyebrow">TIMELESS FURNITURE</p>
+
+            <h1>
+                Beautiful spaces<br />
+                begin with <em>home.</em>
+            </h1>
+
+            <p class="hero-description">
+                Discover thoughtfully designed furniture
+                made for modern living.
+            </p>
+
+            <a asp-controller="Products"
+               asp-action="Index"
+               class="btn btn-accent">
+
+                Explore Collection
+
+                <i class="bi bi-arrow-right"></i>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="section">
+
+    <div class="container">
+
+        <div class="section-heading">
+
+            <div>
+                <p class="eyebrow">SHOP BY ROOM</p>
+
+                <h2>Find your style</h2>
+            </div>
+
+            <a asp-controller="Products"
+               asp-action="Index"
+               class="text-link">
+
+                View all furniture
+                <i class="bi bi-arrow-right"></i>
+
+            </a>
+
+        </div>
+
+
+        <div class="row g-4">
+
+            @foreach (var category in categories!)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+
+                    <a asp-controller="Products"
+                       asp-action="Index"
+                       asp-route-categoryId="@category.Id"
+                       class="category-card">
+
+                        <img src="@category.ImageUrl"
+                             alt="@category.Name" />
+
+                        <div class="category-overlay">
+
+                            <div>
+
+                                <h3>@category.Name</h3>
+
+                                <span>
+                                    Explore collection
+                                    <i class="bi bi-arrow-right"></i>
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </a>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="section section-light">
+
+    <div class="container">
+
+        <div class="section-heading">
+
+            <div>
+
+                <p class="eyebrow">OUR COLLECTION</p>
+
+                <h2>Featured pieces</h2>
+
+            </div>
+
+            <a asp-controller="Products"
+               asp-action="Index"
+               class="text-link">
+
+                Shop all
+                <i class="bi bi-arrow-right"></i>
+
+            </a>
+
+        </div>
+
+
+        <div class="row g-4">
+
+            @foreach (var product in Model)
+            {
+                <div class="col-12 col-md-6 col-lg-3">
+
+                    <div class="product-card">
+
+                        <div class="product-image">
+
+                            <img src="@product.ImageUrl"
+                                 alt="@product.Name" />
+
+                            <form asp-controller="Wishlist"
+                                  asp-action="Add"
+                                  method="post"
+                                  class="wishlist-button">
+
+                                <input type="hidden"
+                                       name="productId"
+                                       value="@product.Id" />
+
+                                <button type="submit">
+
+                                    <i class="bi bi-heart"></i>
+
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                        <div class="product-info">
+
+                            <p class="product-category">
+                                @product.CategoryName
+                            </p>
+
+                            <h3>
+                                @product.Name
+                            </h3>
+
+                            <p class="product-price">
+                                R @product.Price.ToString("N2")
+                            </p>
+
+                            <a asp-controller="Products"
+                               asp-action="Details"
+                               asp-route-id="@product.Id"
+                               class="product-link">
+
+                                View product
+                                <i class="bi bi-arrow-right"></i>
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</section>

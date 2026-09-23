@@ -1,0 +1,162 @@
+﻿@model FurnitureStore.Models.Product
+
+@{
+    ViewData["Title"] = "Add Product";
+
+    var categories =
+        ViewBag.Categories as List<FurnitureStore.Models.Category>;
+}
+
+<section class="page-header">
+
+    <div class="container">
+
+        <p class="eyebrow">ADMINISTRATION</p>
+
+        <h1>Add Product</h1>
+
+    </div>
+
+</section>
+
+
+<section class="section">
+
+    <div class="container">
+
+        <div class="admin-form">
+
+            <form asp-action="Create"
+                  method="post">
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger">
+                </div>
+
+
+                <div class="mb-4">
+
+                    <label asp-for="Name">
+                        Product Name
+                    </label>
+
+                    <input asp-for="Name"
+                           class="form-control" />
+
+                    <span asp-validation-for="Name"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <div class="mb-4">
+
+                    <label asp-for="Description">
+                        Description
+                    </label>
+
+                    <textarea asp-for="Description"
+                              class="form-control"
+                              rows="5">
+                    </textarea>
+
+                </div>
+
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-4">
+
+                        <label asp-for="Price">
+                            Price
+                        </label>
+
+                        <input asp-for="Price"
+                               class="form-control" />
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-4">
+
+                        <label asp-for="CategoryId">
+                            Category
+                        </label>
+
+                        <select asp-for="CategoryId"
+                                class="form-control">
+
+                            <option value="">
+                                Select category
+                            </option>
+
+                            @foreach (var category in categories!)
+                            {
+                                <option value="@category.Id">
+                                    @category.Name
+                                </option>
+                            }
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="mb-4">
+
+                    <label asp-for="ImageUrl">
+                        Image URL
+                    </label>
+
+                    <input asp-for="ImageUrl"
+                           class="form-control" />
+
+                </div>
+
+
+                <div class="form-check mb-4">
+
+                    <input asp-for="IsFeatured"
+                           class="form-check-input" />
+
+                    <label asp-for="IsFeatured"
+                           class="form-check-label">
+
+                        Show as featured product
+
+                    </label>
+
+                </div>
+
+
+                <button type="submit"
+                        class="btn btn-accent">
+
+                    Add Product
+
+                </button>
+
+                <a asp-action="Index"
+                   class="btn btn-light">
+
+                    Cancel
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync(
+            "_ValidationScriptsPartial");
+    }
+}

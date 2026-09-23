@@ -1,0 +1,67 @@
+﻿@{
+    ViewData["Title"] = "Admin Login";
+}
+
+<div class="admin-login-page">
+
+    <div class="admin-login-card">
+
+        <div class="admin-login-header">
+            <span class="admin-login-label">OAK & HAVEN</span>
+
+            <h1>Admin Login</h1>
+
+            <p>
+                Sign in to manage furniture products.
+            </p>
+        </div>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">
+                @ViewBag.Error
+            </div>
+        }
+
+        <form asp-action="Login" method="post">
+
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <label for="username">Username</label>
+
+                <input type="text"
+                       id="username"
+                       name="username"
+                       class="form-control"
+                       placeholder="Enter username"
+                       required />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+
+                <input type="password"
+                       id="password"
+                       name="password"
+                       class="form-control"
+                       placeholder="Enter password"
+                       required />
+            </div>
+
+            <button type="submit"
+                    class="btn btn-dark admin-login-button">
+                Sign In
+            </button>
+
+        </form>
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="admin-back-link">
+            ← Back to store
+        </a>
+
+    </div>
+
+</div>

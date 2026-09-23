@@ -1,0 +1,126 @@
+﻿@model List<FurnitureStore.Models.Product>
+
+@{
+    ViewData["Title"] = "Wishlist";
+}
+
+<section class="page-header">
+
+    <div class="container">
+
+        <p class="eyebrow">YOUR SAVED ITEMS</p>
+
+        <h1>Wishlist</h1>
+
+        <p>
+            Keep track of the furniture pieces you love.
+        </p>
+
+    </div>
+
+</section>
+
+
+<section class="section">
+
+    <div class="container">
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state">
+
+                <i class="bi bi-heart"></i>
+
+                <h2>Your wishlist is empty</h2>
+
+                <p>
+                    Browse our collection and save
+                    pieces you'd like to come back to.
+                </p>
+
+                <a asp-controller="Products"
+                   asp-action="Index"
+                   class="btn btn-accent">
+
+                    Browse Furniture
+
+                </a>
+
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+
+                @foreach (var product in Model)
+                {
+                    <div class="col-12 col-md-6 col-lg-4">
+
+                        <div class="product-card">
+
+                            <div class="product-image">
+
+                                <img src="@product.ImageUrl"
+                                     alt="@product.Name" />
+
+                            </div>
+
+                            <div class="product-info">
+
+                                <p class="product-category">
+                                    @product.CategoryName
+                                </p>
+
+                                <h3>
+                                    @product.Name
+                                </h3>
+
+                                <p class="product-price">
+                                    R @product.Price.ToString("N2")
+                                </p>
+
+
+                                <div class="wishlist-actions">
+
+                                    <a asp-controller="Products"
+                                       asp-action="Details"
+                                       asp-route-id="@product.Id"
+                                       class="product-link">
+
+                                        View product
+
+                                    </a>
+
+
+                                    <form asp-controller="Wishlist"
+                                          asp-action="Remove"
+                                          method="post">
+
+                                        <input type="hidden"
+                                               name="productId"
+                                               value="@product.Id" />
+
+                                        <button type="submit"
+                                                class="remove-button">
+
+                                            Remove
+
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </div>
+
+</section>

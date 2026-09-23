@@ -1,0 +1,113 @@
+﻿@model FurnitureStore.Models.Product
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<section class="section product-details-section">
+
+    <div class="container">
+
+        <a asp-controller="Products"
+           asp-action="Index"
+           class="back-link">
+
+            <i class="bi bi-arrow-left"></i>
+
+            Back to furniture
+
+        </a>
+
+
+        <div class="row align-items-center g-5 mt-2">
+
+            <div class="col-lg-7">
+
+                <div class="details-image">
+
+                    <img src="@Model.ImageUrl"
+                         alt="@Model.Name" />
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-5">
+
+                <p class="product-category">
+                    @Model.CategoryName
+                </p>
+
+                <h1 class="details-title">
+                    @Model.Name
+                </h1>
+
+                <p class="details-price">
+                    R @Model.Price.ToString("N2")
+                </p>
+
+                <div class="details-divider"></div>
+
+                <p class="details-description">
+                    @Model.Description
+                </p>
+
+
+                <form asp-controller="Wishlist"
+                      asp-action="Add"
+                      method="post">
+
+                    <input type="hidden"
+                           name="productId"
+                           value="@Model.Id" />
+
+                    <button type="submit"
+                            class="btn btn-accent btn-large">
+
+                        <i class="bi bi-heart"></i>
+
+                        Add to Wishlist
+
+                    </button>
+
+                </form>
+
+                <div class="product-contact-box">
+
+                    <div class="product-contact-icon">
+
+                        <i class="bi bi-chat-left-text"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h4>Interested in this piece?</h4>
+
+                        <p>
+                            Contact us for availability, delivery options,
+                            pricing and more information.
+                        </p>
+
+                        <a asp-controller="Contact"
+                           asp-action="Index"
+                           class="product-contact-link">
+
+                            Contact the store
+
+                            <i class="bi bi-arrow-right"></i>
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>

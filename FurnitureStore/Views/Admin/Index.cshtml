@@ -1,0 +1,172 @@
+﻿@model List<FurnitureStore.Models.Product>
+
+@{
+    ViewData["Title"] = "Product Management";
+}
+
+<section class="admin-header">
+
+    <div class="container">
+
+        <div class="admin-heading">
+
+            <div>
+
+                <p class="eyebrow">ADMINISTRATION</p>
+
+                <h1>Product Management</h1>
+
+                <p>
+                    Add, edit and remove furniture from the catalogue.
+                </p>
+
+            </div>
+
+
+
+            <div class="admin-header-actions">
+
+                <a asp-controller="Admin"
+                   asp-action="Create"
+                   class="btn btn-accent">
+
+                    <i class="bi bi-plus-lg"></i>
+                    Add Product
+
+                </a>
+
+                <form asp-action="Logout"
+                      method="post"
+                      class="logout-form">
+
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            class="logout-button">
+
+                        <i class="bi bi-box-arrow-right"></i>
+                        Logout
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="section">
+
+    <div class="container">
+
+        <div class="admin-table-wrapper">
+
+            <table class="table admin-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Product</th>
+
+                        <th>Category</th>
+
+                        <th>Price</th>
+
+                        <th>Featured</th>
+
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var product in Model)
+                    {
+                        <tr>
+
+                            <td>
+
+                                <div class="admin-product">
+
+                                    <img src="@product.ImageUrl"
+                                         alt="@product.Name" />
+
+                                    <span>
+                                        @product.Name
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                @product.CategoryName
+                            </td>
+
+                            <td>
+                                R @product.Price.ToString("N2")
+                            </td>
+
+                            <td>
+
+                                @if (product.IsFeatured)
+                                {
+                                    <span class="status-badge">
+                                        Featured
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        No
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td>
+
+                                <div class="admin-actions">
+
+                                    <a asp-controller="Admin"
+                                       asp-action="Edit"
+                                       asp-route-id="@product.Id"
+                                       class="btn btn-sm btn-outline-dark">
+
+                                        Edit
+
+                                    </a>
+
+                                    <a asp-controller="Admin"
+                                       asp-action="Delete"
+                                       asp-route-id="@product.Id"
+                                       class="btn btn-sm btn-outline-danger">
+
+                                        Delete
+
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
