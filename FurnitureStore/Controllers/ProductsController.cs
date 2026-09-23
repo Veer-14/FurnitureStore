@@ -1,41 +1,63 @@
-﻿using FurnitureStore.Services;
+﻿using FurnitureStore.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FurnitureStore.Controllers
 {
     public class ProductsController : Controller
     {
-        private readonly FurnitureShop _store;
+        private readonly FurnitureDbContext _context;
 
-        public ProductsController(FurnitureShop store)
+        public ProductsController(FurnitureDbContext context)
         {
-            _store = store;
+            _context = context;
         }
 
-        public IActionResult Index(int? categoryId)
+        // =====================================================
+        // PRODUCT LIST
+        // =====================================================
+
+        [HttpGet]
+        public async Task<IActionResult> Index(int? categoryId)
         {
-            ViewBag.Categories = _store.Categories;
+            // Get all categories for the category navigation/filter
+            ViewBag.Categories = await _context.Categories
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
-            var products = _store.Products.AsEnumerable();
+            // Start with all products
+            var query = _context.Products
+                .Include(p => p.Category)
+                .AsQueryable();
 
+            // Filter by category if one was selected
             if (categoryId.HasValue)
             {
-                products = products
-                    .Where(p => p.CategoryId == categoryId.Value);
+                query = query.Where(
+                    p => p.CategoryId == categoryId.Value);
 
-                var category = _store.Categories
-                    .FirstOrDefault(c => c.Id == categoryId.Value);
+                var category = await _context.Categories
+                    .FirstOrDefaultAsync(
+                        c => c.Id == categoryId.Value);
 
                 ViewBag.CurrentCategory = category?.Name;
             }
 
-            return View(products.ToList());
+            var products = await query.ToListAsync();
+
+            return View(products);
         }
 
-        public IActionResult Details(int id)
+        // =====================================================
+        // PRODUCT DETAILS
+        // =====================================================
+
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
         {
-            var product = _store.Products
-                .FirstOrDefault(p => p.Id == id);
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
             {

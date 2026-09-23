@@ -1,19 +1,41 @@
 ﻿using FurnitureStore.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace FurnitureStore.Services
+namespace FurnitureStore.Data
 {
-    public class FurnitureShop
+    public class FurnitureDbContext : DbContext
     {
-        public List<Category> Categories { get; set; }
-
-        public List<Product> Products { get; set; }
-
-        public List<WishlistItem> Wishlist { get; set; }
-
-        public FurnitureShop()
+        public FurnitureDbContext(
+            DbContextOptions<FurnitureDbContext> options)
+            : base(options)
         {
-            Categories = new List<Category>
-            {
+        }
+
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<WishlistItem> WishlistItems { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Product → Category relationship
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Price precision
+            modelBuilder.Entity<Product>()
+                .Property(p => p.Price)
+                .HasPrecision(18, 2);
+
+            // --------------------------------
+            // CATEGORIES
+            // --------------------------------
+
+            modelBuilder.Entity<Category>().HasData(
                 new Category
                 {
                     Id = 1,
@@ -61,10 +83,13 @@ namespace FurnitureStore.Services
                     Description = "Furniture for enjoying your outdoor space.",
                     ImageUrl = "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0"
                 }
-            };
+            );
 
-            Products = new List<Product>
-            {
+            // --------------------------------
+            // PRODUCTS
+            // --------------------------------
+
+            modelBuilder.Entity<Product>().HasData(
                 new Product
                 {
                     Id = 1,
@@ -72,7 +97,6 @@ namespace FurnitureStore.Services
                     Description = "A comfortable three-seater sofa with a modern minimalist design.",
                     Price = 12999,
                     CategoryId = 1,
-                    CategoryName = "Living Room",
                     IsFeatured = true,
                     ImageUrl = "https://images.unsplash.com/photo-1555041469-a586c61ea9bc"
                 },
@@ -84,7 +108,6 @@ namespace FurnitureStore.Services
                     Description = "A soft accent chair perfect for reading corners and living rooms.",
                     Price = 4999,
                     CategoryId = 1,
-                    CategoryName = "Living Room",
                     IsFeatured = true,
                     ImageUrl = "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c"
                 },
@@ -96,7 +119,6 @@ namespace FurnitureStore.Services
                     Description = "Solid oak-inspired dining table with a clean contemporary finish.",
                     Price = 8999,
                     CategoryId = 3,
-                    CategoryName = "Dining",
                     IsFeatured = true,
                     ImageUrl = "https://images.unsplash.com/photo-1617806118233-18e1de247200"
                 },
@@ -108,7 +130,6 @@ namespace FurnitureStore.Services
                     Description = "Minimal dining chair designed for everyday comfort.",
                     Price = 1899,
                     CategoryId = 3,
-                    CategoryName = "Dining",
                     IsFeatured = false,
                     ImageUrl = "https://images.unsplash.com/photo-1503602642458-232111445657"
                 },
@@ -120,7 +141,6 @@ namespace FurnitureStore.Services
                     Description = "A simple upholstered bed frame with a soft neutral finish.",
                     Price = 10999,
                     CategoryId = 2,
-                    CategoryName = "Bedroom",
                     IsFeatured = true,
                     ImageUrl = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85"
                 },
@@ -132,7 +152,6 @@ namespace FurnitureStore.Services
                     Description = "Compact bedside table with a drawer and open storage.",
                     Price = 2499,
                     CategoryId = 2,
-                    CategoryName = "Bedroom",
                     IsFeatured = false,
                     ImageUrl = "https://images.unsplash.com/photo-1532372576444-dda954194ad0"
                 },
@@ -144,7 +163,6 @@ namespace FurnitureStore.Services
                     Description = "Elegant storage cabinet for books, crockery and accessories.",
                     Price = 6999,
                     CategoryId = 4,
-                    CategoryName = "Storage",
                     IsFeatured = true,
                     ImageUrl = "https://images.unsplash.com/photo-1595428774223-ef52624120d2"
                 },
@@ -156,13 +174,10 @@ namespace FurnitureStore.Services
                     Description = "Clean and functional desk for your home office.",
                     Price = 4499,
                     CategoryId = 5,
-                    CategoryName = "Office",
                     IsFeatured = false,
                     ImageUrl = "https://images.unsplash.com/photo-1497366811353-6870744d04b2"
                 }
-            };
-
-            Wishlist = new List<WishlistItem>();
+            );
         }
     }
 }

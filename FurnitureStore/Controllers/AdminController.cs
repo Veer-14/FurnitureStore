@@ -1,35 +1,38 @@
-﻿using FurnitureStore.Services;
+﻿using FurnitureStore.Data;
 using FurnitureStore.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace FurnitureStore.Controllers
 {
     public class AdminController : Controller
     {
-        private readonly FurnitureShop _store;
+        private readonly FurnitureDbContext _context;
 
         // Temporary prototype credentials
-        // Change these before presenting the application.
+        // Change these before the final production deployment.
         private const string AdminUsername = "admin";
         private const string AdminPassword = "Admin123!";
 
-        public AdminController(FurnitureShop store)
+        public AdminController(FurnitureDbContext context)
         {
-            _store = store;
+            _context = context;
         }
 
-        // -----------------------------
+        // =====================================================
         // ADMIN LOGIN
-        // -----------------------------
+        // =====================================================
 
         [AllowAnonymous]
         [HttpGet]
         public IActionResult Login()
         {
+            // If the admin is already logged in,
+            // send them directly to the dashboard.
             if (User.Identity?.IsAuthenticated == true)
             {
                 return RedirectToAction(nameof(Index));
@@ -68,12 +71,13 @@ namespace FurnitureStore.Controllers
             }
 
             ViewBag.Error = "Invalid username or password.";
+
             return View();
         }
 
-        // -----------------------------
+        // =====================================================
         // ADMIN LOGOUT
-        // -----------------------------
+        // =====================================================
 
         [Authorize(Roles = "Admin")]
         [HttpPost]
@@ -86,81 +90,116 @@ namespace FurnitureStore.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // -----------------------------
+        // =====================================================
         // ADMIN DASHBOARD
-        // -----------------------------
-
-        [Authorize(Roles = "Admin")]
-        public IActionResult Index()
-        {
-            return View(_store.Products);
-        }
-
-        // -----------------------------
-        // CREATE PRODUCT
-        // -----------------------------
+        // =====================================================
 
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Index()
         {
-            ViewBag.Categories = _store.Categories;
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .ToListAsync();
+
+            return View(products);
+        }
+
+        // =====================================================
+        // CREATE PRODUCT - GET
+        // =====================================================
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> Create()
+        {
+            ViewBag.Categories =
+                await _context.Categories
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
+
             return View();
         }
+
+        // =====================================================
+        // CREATE PRODUCT - POST
+        // =====================================================
 
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Product product)
+        public async Task<IActionResult> Create(Product product)
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.Categories = _store.Categories;
+                ViewBag.Categories =
+                    await _context.Categories
+                        .OrderBy(c => c.Name)
+                        .ToListAsync();
+
                 return View(product);
             }
 
-            product.Id = _store.Products.Any()
-                ? _store.Products.Max(p => p.Id) + 1
-                : 1;
+            // Make sure the selected category actually exists.
+            var category = await _context.Categories
+                .FirstOrDefaultAsync(c => c.Id == product.CategoryId);
 
-            var category = _store.Categories
-                .FirstOrDefault(c => c.Id == product.CategoryId);
-
-            if (category != null)
+            if (category == null)
             {
-                product.CategoryName = category.Name;
+                ModelState.AddModelError(
+                    "CategoryId",
+                    "Please select a valid category.");
+
+                ViewBag.Categories =
+                    await _context.Categories
+                        .OrderBy(c => c.Name)
+                        .ToListAsync();
+
+                return View(product);
             }
 
-            _store.Products.Add(product);
+            // Add the product to PostgreSQL.
+            _context.Products.Add(product);
+
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
 
-        // -----------------------------
-        // EDIT PRODUCT
-        // -----------------------------
+        // =====================================================
+        // EDIT PRODUCT - GET
+        // =====================================================
 
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var product = _store.Products
-                .FirstOrDefault(p => p.Id == id);
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
             {
                 return NotFound();
             }
 
-            ViewBag.Categories = _store.Categories;
+            ViewBag.Categories =
+                await _context.Categories
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
 
             return View(product);
         }
 
+        // =====================================================
+        // EDIT PRODUCT - POST
+        // =====================================================
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Product product)
+        public async Task<IActionResult> Edit(
+            int id,
+            Product product)
         {
             if (id != product.Id)
             {
@@ -169,18 +208,42 @@ namespace FurnitureStore.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Categories = _store.Categories;
+                ViewBag.Categories =
+                    await _context.Categories
+                        .OrderBy(c => c.Name)
+                        .ToListAsync();
+
                 return View(product);
             }
 
-            var existingProduct = _store.Products
-                .FirstOrDefault(p => p.Id == id);
+            // Make sure the category exists.
+            var category = await _context.Categories
+                .FirstOrDefaultAsync(c => c.Id == product.CategoryId);
+
+            if (category == null)
+            {
+                ModelState.AddModelError(
+                    "CategoryId",
+                    "Please select a valid category.");
+
+                ViewBag.Categories =
+                    await _context.Categories
+                        .OrderBy(c => c.Name)
+                        .ToListAsync();
+
+                return View(product);
+            }
+
+            // Find the existing database record.
+            var existingProduct = await _context.Products
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (existingProduct == null)
             {
                 return NotFound();
             }
 
+            // Update the database record.
             existingProduct.Name = product.Name;
             existingProduct.Description = product.Description;
             existingProduct.Price = product.Price;
@@ -188,27 +251,22 @@ namespace FurnitureStore.Controllers
             existingProduct.CategoryId = product.CategoryId;
             existingProduct.IsFeatured = product.IsFeatured;
 
-            var category = _store.Categories
-                .FirstOrDefault(c => c.Id == product.CategoryId);
-
-            if (category != null)
-            {
-                existingProduct.CategoryName = category.Name;
-            }
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
 
-        // -----------------------------
-        // DELETE PRODUCT
-        // -----------------------------
+        // =====================================================
+        // DELETE PRODUCT - GET
+        // =====================================================
 
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var product = _store.Products
-                .FirstOrDefault(p => p.Id == id);
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
             {
@@ -218,18 +276,26 @@ namespace FurnitureStore.Controllers
             return View(product);
         }
 
+        // =====================================================
+        // DELETE PRODUCT - POST
+        // =====================================================
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = _store.Products
-                .FirstOrDefault(p => p.Id == id);
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p => p.Id == id);
 
-            if (product != null)
+            if (product == null)
             {
-                _store.Products.Remove(product);
+                return NotFound();
             }
+
+            _context.Products.Remove(product);
+
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }

@@ -1,24 +1,30 @@
-using FurnitureStore.Services;
+using FurnitureStore.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FurnitureStore.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly FurnitureShop _store;
+        private readonly FurnitureDbContext _context;
 
-        public HomeController(FurnitureShop store)
+        public HomeController(FurnitureDbContext context)
         {
-            _store = store;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            ViewBag.Categories = _store.Categories;
+            // Get categories from PostgreSQL
+            ViewBag.Categories = await _context.Categories
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
-            var featuredProducts = _store.Products
+            // Get featured products from PostgreSQL
+            var featuredProducts = await _context.Products
+                .Include(p => p.Category)
                 .Where(p => p.IsFeatured)
-                .ToList();
+                .ToListAsync();
 
             return View(featuredProducts);
         }

@@ -1,67 +1,93 @@
-﻿using FurnitureStore.Models;
-using FurnitureStore.Services;
+﻿using FurnitureStore.Data;
+using FurnitureStore.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FurnitureStore.Controllers
 {
     public class WishlistController : Controller
     {
-        private readonly FurnitureShop _store;
+        private readonly FurnitureDbContext _context;
 
-        public WishlistController(FurnitureShop store)
+        public WishlistController(FurnitureDbContext context)
         {
-            _store = store;
+            _context = context;
         }
 
-        public IActionResult Index()
+        // =====================================================
+        // VIEW WISHLIST
+        // =====================================================
+
+        [HttpGet]
+        public async Task<IActionResult> Index()
         {
-            var products = _store.Wishlist
-                .Select(w => _store.Products
-                    .FirstOrDefault(p => p.Id == w.ProductId))
-                .Where(p => p != null)
+            var wishlistItems = await _context.WishlistItems
+                .Include(w => w.Product)
+                .ThenInclude(p => p!.Category)
+                .ToListAsync();
+
+            var products = wishlistItems
+                .Where(w => w.Product != null)
+                .Select(w => w.Product!)
                 .ToList();
 
             return View(products);
         }
 
+        // =====================================================
+        // ADD TO WISHLIST
+        // =====================================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Add(int productId)
+        public async Task<IActionResult> Add(int productId)
         {
-            var product = _store.Products
-                .FirstOrDefault(p => p.Id == productId);
+            // Check that the product exists
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p => p.Id == productId);
 
             if (product == null)
             {
                 return NotFound();
             }
 
-            bool alreadyExists = _store.Wishlist
-                .Any(w => w.ProductId == productId);
+            // Check if it is already in the wishlist
+            var alreadyExists = await _context.WishlistItems
+                .AnyAsync(w => w.ProductId == productId);
 
             if (!alreadyExists)
             {
-                _store.Wishlist.Add(new WishlistItem
+                var wishlistItem = new WishlistItem
                 {
-                    Id = _store.Wishlist.Count + 1,
                     ProductId = productId
-                });
+                };
+
+                _context.WishlistItems.Add(wishlistItem);
+
+                await _context.SaveChangesAsync();
             }
 
             // Take the user directly to their wishlist
             return RedirectToAction(nameof(Index));
         }
 
+        // =====================================================
+        // REMOVE FROM WISHLIST
+        // =====================================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Remove(int productId)
+        public async Task<IActionResult> Remove(int productId)
         {
-            var item = _store.Wishlist
-                .FirstOrDefault(w => w.ProductId == productId);
+            var wishlistItem = await _context.WishlistItems
+                .FirstOrDefaultAsync(
+                    w => w.ProductId == productId);
 
-            if (item != null)
+            if (wishlistItem != null)
             {
-                _store.Wishlist.Remove(item);
+                _context.WishlistItems.Remove(wishlistItem);
+
+                await _context.SaveChangesAsync();
             }
 
             return RedirectToAction(nameof(Index));

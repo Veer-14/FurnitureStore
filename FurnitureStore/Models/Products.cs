@@ -21,7 +21,7 @@ namespace FurnitureStore.Models
 
         public int CategoryId { get; set; }
 
-        public string CategoryName { get; set; } = string.Empty;
+        public Category? Category { get; set; }
 
         public bool IsFeatured { get; set; }
     }
