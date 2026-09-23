@@ -1,0 +1,17 @@
+{
+  "services": {
+    "furniture-store": {
+      "runtime": "container",
+      "root": "FurnitureStore/",
+      "entrypoint": "Dockerfile.vercel"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "furniture-store"
+      }
+    }
+  ]
+}
